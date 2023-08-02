@@ -1,0 +1,11 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: 
+  name: user1role 
+  namespace: default 
+rules: #role 정의 
+- apiGroups: ["","apps"] #CoreGroup, deploy추가하고 싶다면 ["","apps"] 
+  resources: ["deployments", "services", "pods"]
+  verbs: ["get","list","watch","delete"] #list -> k get svc, 특정 서비스 하나에 대한 상세 정보 보고싶다면 "get", 실시간정보 "watch"
+
+  

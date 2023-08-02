@@ -1,0 +1,54 @@
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoscaletest
+spec:
+  selector:
+    matchLabels:
+      color: blue
+  replicas: 1
+  template:     # Pod
+    metadata:
+      labels:
+        color: blue
+    spec:
+      containers:
+      - name: autoscaletest-ctn
+        image: brian24/rapa:shop
+        ports:
+        - containerPort: 80
+        resources:
+          limits:       # 다른 Pod 가 사용하지 않으면 확장가능
+            cpu: 1000m
+          requests:     # 최소보장
+            cpu: 50m   # 기준 1000m = 1 개의 CPU
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: autoscale-lb
+spec:
+  ports:
+  - name: autoscale-port
+    port: 80
+    targetPort: 80         # Pod
+    #NodePort: 30001       # 지정안하면 랜덤(30000~32767)
+  selector:                # 어떤 Pod 로 트래픽을 전달할 것인가?
+    color: blue
+  type: LoadBalancer            # 지정하지 않으면 cluster-ip
+---
+# HPA
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: test-autoscale
+spec:
+  maxReplicas: 6
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: autoscaletest
+  targetCPUUtilizationPercentage: 10
